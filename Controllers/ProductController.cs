@@ -64,17 +64,42 @@ namespace VitecApi.Controllers
 
         // PUT api/<controller>/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Product item)
+        public async Task<IActionResult> Put(int id, Product item)
         {
-            var productItem = await _context.Products.FindAsync(id);
+            //var productItem = await _context.Products.FindAsync(id);
 
-            if (productItem == null)
+            //if (productItem == null)
+            //{
+            //    return NotFound();
+            //}
+
+            //_context.Entry(item).State = EntityState.Modified;
+            //await _context.SaveChangesAsync();
+
+            //return NoContent();
+
+            if (id != item.ProductId)
             {
-                return NotFound();
+                return BadRequest();
             }
 
             _context.Entry(item).State = EntityState.Modified;
-            await _context.SaveChangesAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!ProductExists(id))
+                {
+                    return NotFound();
+                }
+                else
+                {
+                    throw;
+                }
+            }
 
             return NoContent();
         }
@@ -94,6 +119,11 @@ namespace VitecApi.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        private bool ProductExists(int id)
+        {
+            return _context.Products.Any(e => e.ProductId == id);
         }
     }
 }
